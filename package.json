@@ -9,11 +9,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:extension.startServer",
-    "onCommand:extension.stopServer",
-    "onCommand:extension.dfxDeploy"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
