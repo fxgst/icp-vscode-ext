@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { spawn, exec } from 'child_process';
 
 let view: vscode.WebviewView;
 
 function spawnCommand(command: string, args: string[], success: { (arg0: string[]): void; }, failure: { (arg0: string[]): void; }) {
+	const { spawn } = require('child_process');
 	const cmd = spawn(command, args, { cwd: `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}` });
 	// Listen for any response from the command
 	let output: string[] = [''];
@@ -45,9 +45,7 @@ function stopServer() {
 function deployCanisters() {
 	vscode.window.showInformationMessage('Deploying canisters...');
 	spawnCommand('dfx', ['deploy'], (output) => {
-		// const urls_start = output.findIndex((line: string) => line.includes('URLs:'));
-		// let urls = `${output.at(urls_start) ?? ''} ${output.at(urls_start + 1) ?? ''}`;
-		const fs = require('node:fs');
+		const { fs } = require('fs');
 		fs.readFile(`${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/.dfx/local/canister_ids.json`, 'utf8', (err: any, data: any) => {
 			if (err) {
 				vscode.window.showErrorMessage(err);
