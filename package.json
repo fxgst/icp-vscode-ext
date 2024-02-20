@@ -1,0 +1,74 @@
+{
+  "name": "icp-dev-ext",
+  "displayName": "ICP dev ext",
+  "description": "ICP developer extension",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:extension.startServer",
+    "onCommand:extension.stopServer",
+    "onCommand:extension.dfxDeploy"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.startServer",
+        "title": "Start Server"
+      },
+      {
+        "command": "extension.stopServer",
+        "title": "Stop Server"
+      },
+      {
+        "command": "extension.dfxDeploy",
+        "title": "Deploy Canisters Locally"
+      },
+      {
+        "command": "extension.dfxDeployMainnet",
+        "title": "Deploy Canisters to the ICP"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sidebar",
+          "title": "ICP Developer Extension",
+          "icon": "default.png"
+        }
+      ]
+    },
+    "views": {
+      "sidebar": [
+        {
+          "type": "webview",
+          "id": "base-view-sidebar",
+          "name": "ICP Developer Extension",
+          "icon": "default.png",
+          "contextualTitle": "ICP Developer Extension"
+        }
+      ]
+    },
+    "statusbar": [
+      {
+        "id": "extension.startServer",
+        "alignment": "left",
+        "priority": 100
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -watch -p .",
+    "test": "echo \"No tests yet...\""
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.0.0",
+    "typescript": "^4.5.4"
+  }
+}
