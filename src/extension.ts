@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 
 let view: vscode.WebviewView;
 
@@ -44,9 +45,9 @@ function stopServer() {
 
 function deployCanisters() {
 	vscode.window.showInformationMessage('Deploying canisters...');
-	spawnCommand('dfx', ['deploy'], (output) => {
-		const { fs } = require('fs');
-		fs.readFile(`${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/.dfx/local/canister_ids.json`, 'utf8', (err: any, data: any) => {
+	spawnCommand('dfx', ['deploy'], () => {
+		const file = `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/.dfx/local/canister_ids.json`;
+		fs.readFile(file, 'utf8', (err: any, data: any) => {
 			if (err) {
 				vscode.window.showErrorMessage(err);
 				return;
@@ -56,8 +57,7 @@ function deployCanisters() {
 				type: 'updateCanisterList', value: canisters
 			};
 			view.webview.postMessage(message);
-		}
-		);
+		});
 		vscode.window.showInformationMessage("Deployed canisters!");
 
 	}, (output) => {
@@ -205,6 +205,7 @@ function load_extension(context: vscode.ExtensionContext) {
 
 
 export function activate(context: vscode.ExtensionContext) {
+	// Check if there's a dfx.json file in the workspace
 	spawnCommand('find', ['dfx.json'], () => { load_extension(context); }, () => vscode.window.showErrorMessage('No dfx.json file found in the workspace.'));
 }
 
