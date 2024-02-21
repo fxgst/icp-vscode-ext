@@ -7,9 +7,8 @@
     // @ts-ignore
     const vscode = acquireVsCodeApi();
 
-    // const oldState = vscode.getState() || { stored_value: [] };
-    // /** @type {Array<{ value: string }>} */
-    // let stored_value = oldState.stored_value;
+    const oldState = vscode.getState();
+    updateCanisterList(oldState.canisters);
 
     document.querySelector('.dfx-start-button')?.addEventListener('click', () => {
         dfxStart();
@@ -36,15 +35,45 @@
                     updateCanisterList(message.value);
                     break;
                 }
+            case 'deactivate':
+                {
+                    deactivate();
+                    break;
+                }
         }
     });
 
-    function updateCanisterList(canisters) {
-        // Append something like this for each canister:
-        // <a href="http://127.0.0.1:4943/?canisterId=bd3sg-teaaa-aaaaa-qaaba-cai">
-        //    <button>Open frontend in Browser</button>
+    /**
+     * @param {Element | null} div
+     * @param {string} link
+     * @param {string} text
+     */
+    function addOpenCanisterButton(div, link, text) {
+        // Produces the following HTML:
+        // <a href="link">
+        //    <button>text</button>
         // </a>
-        const div = document.querySelector('.canister-links');
+        const a = document.createElement('a');
+        a.href = link;
+        a.innerHTML = `<button>${text}</button>`;
+        div?.appendChild(a);
+        div?.appendChild(document.createElement('br'));
+        div?.appendChild(document.createElement('br'));
+    }
+
+    /**
+     * @param {Element | null} div
+     */
+    function resetCanisterLinks(div) {
+        while (div?.firstChild) {
+            div.removeChild(div.firstChild);
+        }
+    }
+
+    function updateCanisterList(canisters) {
+        vscode.setState({ canisters: canisters });
+        let div = document.querySelector('.canister-links');
+        resetCanisterLinks(div);
 
         let backend_canisters = [];
         let candid_ui_canister = '';
@@ -59,21 +88,18 @@
             }
         }
 
-        const a = document.createElement('a');
-        a.href = `http://127.0.0.1:4943/?canisterId=${frontend_canister}`;
-        a.innerHTML = `<button>Open frontend in Browser</button>`;
-        div?.appendChild(a);
-        div?.appendChild(document.createElement('br'));
-        div?.appendChild(document.createElement('br'));
-
-        for (const canister of backend_canisters) {
-            const a = document.createElement('a');
-            a.href = `http://127.0.0.1:4943/?canisterId=${candid_ui_canister}&id=${canister[1]}`;
-            a.innerHTML = `<button>Open ${canister[0]} Candid UI</button>`;
-            div?.appendChild(a);
-            div?.appendChild(document.createElement('br'));
-            div?.appendChild(document.createElement('br'));
+        if (frontend_canister !== '') {
+            addOpenCanisterButton(div, `http://127.0.0.1:4943/?canisterId=${frontend_canister}`, 'Open frontend in Browser');
         }
+        for (const canister of backend_canisters) {
+            addOpenCanisterButton(div, `http://127.0.0.1:4943/?canisterId=${candid_ui_canister}&id=${canister[1]}`, `Open ${canister[0]} Candid UI`);
+        }
+    }
+
+    function deactivate() {
+        vscode.setState({ canisters: null });
+        let div = document.querySelector('.canister-links');
+        resetCanisterLinks(div);
     }
 
     function dfxStart() {

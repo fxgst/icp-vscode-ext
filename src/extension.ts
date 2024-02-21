@@ -29,6 +29,10 @@ function spawnCommand(command: string, args: string[], success: { (arg0: string[
 	});
 }
 
+function resetCanisterList(): Thenable<boolean> {
+	return view.webview.postMessage({ type: 'deactivate' });
+}
+
 function startServer() {
 	spawnCommand('dfx', ['start', '--background', '--clean'], (output) => {
 		vscode.window.showInformationMessage('Server started.');
@@ -40,7 +44,7 @@ function stopServer() {
 	spawnCommand('dfx', ['stop'], () => {
 		vscode.window.showInformationMessage('Server stopped.');
 	}, (output) => { vscode.window.showErrorMessage(output.flat().join('')); });
-
+	resetCanisterList();
 }
 
 function deployCanisters() {
@@ -211,4 +215,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
 	// This method is called when the extension is deactivated
+	// FIXME: This message never reaches the webview, probably gets killed too early
+	resetCanisterList().then(() => console.log('Successfully reset canister list.'));
 }
