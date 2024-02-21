@@ -22,13 +22,23 @@
       },
       {
         "command": "extension.dfxDeploy",
-        "title": "Deploy Canisters Locally"
+        "title": "Deploy Canisters Locally",
+        "icon": "$(debug-start)"
       },
       {
         "command": "extension.dfxDeployMainnet",
         "title": "Deploy Canisters to the ICP"
       }
     ],
+    "menus": {
+			"view/title": [
+				{
+					"command": "extension.dfxDeploy",
+					"group": "navigation",
+					"when": "view == base-view-sidebar"
+				}
+			]
+		},
     "viewsContainers": {
       "activitybar": [
         {

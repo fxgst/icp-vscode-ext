@@ -147,13 +147,13 @@ class MainViewProvider implements vscode.WebviewViewProvider {
 				</head>
 				<body>
 				
-				<h2>IC Server</h2>
-				<button class="dfx-start-button">Start Server</button>
-				<button class="dfx-stop-button">Stop Server</button>
+				<!--<h2>IC Server</h2>-->
+				<!--<button class="dfx-start-button">Start Server</button>-->
+				<!--<button class="dfx-stop-button">Stop Server</button>-->
 				
 				<h2>Develop</h2>
 				
-				<button class="dfx-deploy-button">Deploy Canisters</button>
+				<!--<button class="dfx-deploy-button">Deploy Canisters</button>-->
 				<button class="dfx-deploy-button">Publish Canisters on ICP</button>
 				
 				<h2>Canisters</h2>
@@ -201,8 +201,8 @@ function load_extension(context: vscode.ExtensionContext) {
 
 	// Add a disposable to dispose the subscriptions when the extension is deactivated
 	context.subscriptions.push(startServerIcon, disposableStart, disposableStop, dfxDeploy);
+	startServer();
 }
-
 
 export function activate(context: vscode.ExtensionContext) {
 	// Check if there's a dfx.json file in the workspace
@@ -211,5 +211,4 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
 	// This method is called when the extension is deactivated
-	stopServer();
 }
