@@ -19,9 +19,12 @@
     document.querySelector('.dfx-deploy-button')?.addEventListener('click', () => {
         dfxDeploy();
     });
+    document.querySelector('.publish-canisters-button')?.addEventListener('click', () => {
+        publishCanisters();
+    });
 
     // Handle messages sent from the extension to the webview
-    // VSCode Command => UI
+    // extension => UI
     window.addEventListener('message', event => {
         const message = event.data; // The json data that the extension sent
         switch (message.type) {
@@ -38,6 +41,11 @@
             case 'deactivate':
                 {
                     deactivate();
+                    break;
+                }
+            case 'showQRCode':
+                {
+                    showQRCode(message.value);
                     break;
                 }
         }
@@ -64,7 +72,7 @@
     /**
      * @param {Element | null} div
      */
-    function resetCanisterLinks(div) {
+    function removeChildren(div) {
         while (div?.firstChild) {
             div.removeChild(div.firstChild);
         }
@@ -73,7 +81,7 @@
     function updateCanisterList(canisters) {
         vscode.setState({ canisters: canisters });
         let div = document.querySelector('.canister-links');
-        resetCanisterLinks(div);
+        removeChildren(div);
 
         let backend_canisters = [];
         let candid_ui_canister = '';
@@ -96,10 +104,25 @@
         }
     }
 
+    function showQRCode(accountId) {
+        // vscode.setState({ accountId: accountId }); // FIXME: overrides everything
+        let qrCode = document.querySelector('.qr-code');
+        removeChildren(qrCode);
+       
+
+        let p = document.createElement('p');
+        p.textContent = 'Please transfer 1 ICP to ' + accountId;
+        qrCode?.appendChild(p);
+    }
+
+    function publishCanisters() {
+        vscode.postMessage({ type: 'publishCanisters' });
+    }
+
     function deactivate() {
         vscode.setState({ canisters: null });
         let div = document.querySelector('.canister-links');
-        resetCanisterLinks(div);
+        removeChildren(div);
     }
 
     function dfxStart() {

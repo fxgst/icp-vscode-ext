@@ -48,12 +48,22 @@ function stopServer() {
 }
 
 function publishCanisters() {
-	// dfx identity new vscode-ext --storage-mode plaintext
-	// dfx identity use vscode-ext
-	// dfx identity export vscode-ext > identity.pem
+	// ✅ dfx identity new vscode-ext --storage-mode plaintext
+	// ✅ dfx identity use vscode-ext
+	spawnCommand('dfx', ['ledger', 'account-id'], (output) => {
+		const account = output.flat().join('');
+		const message = { type: 'showQRCode', value: account};
+		view.webview.postMessage(message);
+		vscode.window.showInformationMessage(`Account ID: ${account}`);
+	} , (output) => { vscode.window.showErrorMessage(output.flat().join('')); });
+
+	// show balance: dfx ledger balance --network ic
+
+	
 	// dfx ledger account-id
 	// show qr code, request user to send X ICP to the account
 	// dfx quickstart
+	// dfx identity export vscode-ext > identity.pem
 }
 
 function deployCanisters() {
@@ -79,32 +89,26 @@ function deployCanisters() {
 }
 
 class MainViewProvider implements vscode.WebviewViewProvider {
-
 	public static readonly viewType = 'base-view-sidebar';
-
 	constructor(
 		private readonly _extensionUri: vscode.Uri,
 	) { }
-
 	public resolveWebviewView(
 		webviewView: vscode.WebviewView,
 		context: vscode.WebviewViewResolveContext,
 		_token: vscode.CancellationToken,
 	) {
 		view = webviewView;
-
 		webviewView.webview.options = {
 			// Allow scripts in the webview
 			enableScripts: true,
-
 			localResourceRoots: [
 				this._extensionUri
 			]
 		};
-
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-		// UI => vscode command
+		// UI => extension
 		webviewView.webview.onDidReceiveMessage(data => {
 			switch (data.type) {
 				case 'dfxStart':
@@ -120,6 +124,11 @@ class MainViewProvider implements vscode.WebviewViewProvider {
 				case 'dfxDeploy':
 					{
 						deployCanisters();
+						break;
+					}
+				case 'publishCanisters':
+					{
+						publishCanisters();
 						break;
 					}
 			}
@@ -167,7 +176,9 @@ class MainViewProvider implements vscode.WebviewViewProvider {
 				<h2>Develop</h2>
 				
 				<!--<button class="dfx-deploy-button">Deploy Canisters</button>-->
-				<button class="dfx-deploy-button">Publish Canisters on ICP</button>
+				<button class="publish-canisters-button">Publish Canisters on ICP mainnet</button>
+
+				<div class="qr-code"></div>
 				
 				<h2>Canisters</h2>
 				
@@ -212,8 +223,10 @@ function load_extension(context: vscode.ExtensionContext) {
 	// Register the command to deploy canisters
 	let dfxDeploy = vscode.commands.registerCommand('extension.dfxDeploy', deployCanisters);
 
+	let publish = vscode.commands.registerCommand('extension.publishCanisters', publishCanisters);
+
 	// Add a disposable to dispose the subscriptions when the extension is deactivated
-	context.subscriptions.push(startServerIcon, disposableStart, disposableStop, dfxDeploy);
+	context.subscriptions.push(startServerIcon, disposableStart, disposableStop, dfxDeploy, publish);
 
 	// Start the server, create an identity and set it.
 	spawnCommand('dfx', ['start', '--background', '--clean'], (output) => {

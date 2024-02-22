@@ -26,7 +26,7 @@
         "icon": "$(debug-start)"
       },
       {
-        "command": "extension.dfxDeployMainnet",
+        "command": "extension.publishCanisters",
         "title": "Deploy Canisters to the ICP"
       }
     ],
@@ -87,6 +87,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dfinity/gix-components": "^4.1.0"
+    "@dfinity/gix-components": "^4.1.0",
+    "qr-creator": "^1.0.0"
   }
 }
