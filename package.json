@@ -31,14 +31,14 @@
       }
     ],
     "menus": {
-			"view/title": [
-				{
-					"command": "extension.dfxDeploy",
-					"group": "navigation",
-					"when": "view == base-view-sidebar"
-				}
-			]
-		},
+      "view/title": [
+        {
+          "command": "extension.dfxDeploy",
+          "group": "navigation",
+          "when": "view == base-view-sidebar"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {
@@ -85,5 +85,8 @@
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^8.56.0",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@dfinity/gix-components": "^4.1.0"
   }
 }

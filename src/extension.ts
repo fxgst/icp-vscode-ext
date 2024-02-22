@@ -47,6 +47,15 @@ function stopServer() {
 	resetCanisterList();
 }
 
+function publishCanisters() {
+	// dfx identity new vscode-ext --storage-mode plaintext
+	// dfx identity use vscode-ext
+	// dfx identity export vscode-ext > identity.pem
+	// dfx ledger account-id
+	// show qr code, request user to send X ICP to the account
+	// dfx quickstart
+}
+
 function deployCanisters() {
 	vscode.window.showInformationMessage('Deploying canisters...');
 	spawnCommand('dfx', ['deploy'], () => {
@@ -205,7 +214,18 @@ function load_extension(context: vscode.ExtensionContext) {
 
 	// Add a disposable to dispose the subscriptions when the extension is deactivated
 	context.subscriptions.push(startServerIcon, disposableStart, disposableStop, dfxDeploy);
-	startServer();
+
+	// Start the server, create an identity and set it.
+	spawnCommand('dfx', ['start', '--background', '--clean'], (output) => {
+		vscode.window.showInformationMessage('Server started.');
+		vscode.window.showInformationMessage(`${output.at(-1)}`);
+		spawnCommand('dfx', ['identity', 'new', 'vscode-ext', '--storage-mode', 'plaintext'], () => {
+			vscode.window.showInformationMessage('Identity created.');
+			spawnCommand('dfx', ['identity', 'use', 'vscode-ext'], () => {
+				vscode.window.showInformationMessage('Identity set.');
+			}, (output) => { vscode.window.showErrorMessage(output.flat().join('')); });
+		}, (output) => { vscode.window.showErrorMessage(output.flat().join('')); });
+	}, (output) => { vscode.window.showErrorMessage(output.flat().join('')); });
 }
 
 export function activate(context: vscode.ExtensionContext) {

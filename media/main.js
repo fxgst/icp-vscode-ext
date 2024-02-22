@@ -114,5 +114,3 @@
         vscode.postMessage({ type: 'dfxDeploy' });
     }
 }());
-
-
