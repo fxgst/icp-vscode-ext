@@ -109,7 +109,7 @@
         let qrCode = document.querySelector('.qr-code');
         removeChildren(qrCode);
        
-
+        // show such a QR code: https://gix.design/components/qr-code-generator
         let p = document.createElement('p');
         p.textContent = 'Please transfer 1 ICP to ' + accountId;
         qrCode?.appendChild(p);
