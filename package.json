@@ -1,94 +1,94 @@
 {
-  "name": "icp-dev-ext",
-  "displayName": "ICP dev ext",
-  "description": "ICP developer extension",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.86.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "extension.startServer",
-        "title": "Start Server"
-      },
-      {
-        "command": "extension.stopServer",
-        "title": "Stop Server"
-      },
-      {
-        "command": "extension.dfxDeploy",
-        "title": "Deploy Canisters Locally",
-        "icon": "$(debug-start)"
-      },
-      {
-        "command": "extension.publishCanisters",
-        "title": "Deploy Canisters to the ICP"
-      }
+    "name": "icp-dev-ext",
+    "displayName": "ICP dev ext",
+    "description": "ICP developer extension",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.86.0"
+    },
+    "categories": [
+        "Other"
     ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "extension.dfxDeploy",
-          "group": "navigation",
-          "when": "view == base-view-sidebar"
-        }
-      ]
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.startServer",
+                "title": "Start Server"
+            },
+            {
+                "command": "extension.stopServer",
+                "title": "Stop Server"
+            },
+            {
+                "command": "extension.dfxDeploy",
+                "title": "Deploy Canisters Locally",
+                "icon": "$(debug-start)"
+            },
+            {
+                "command": "extension.publishCanisters",
+                "title": "Deploy Canisters to the ICP"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "extension.dfxDeploy",
+                    "group": "navigation",
+                    "when": "view == base-view-sidebar"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "sidebar",
+                    "title": "ICP Developer Extension",
+                    "icon": "default.png"
+                }
+            ]
+        },
+        "views": {
+            "sidebar": [
+                {
+                    "type": "webview",
+                    "id": "base-view-sidebar",
+                    "name": "ICP Developer Extension",
+                    "icon": "default.png",
+                    "contextualTitle": "ICP Developer Extension"
+                }
+            ]
+        },
+        "statusbar": [
+            {
+                "id": "extension.startServer",
+                "alignment": "left",
+                "priority": 100
+            }
+        ]
     },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "sidebar",
-          "title": "ICP Developer Extension",
-          "icon": "default.png"
-        }
-      ]
+    "scripts": {
+        "postinstall": "cd webview-ui && npm i",
+        "start": "cd webview-ui && npm start",
+        "build": "cd webview-ui && npm run build",
+        "vscode:prepublish": "npm run compile",
+        "compile": "npm run build && tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "package": "npm run compile && npm test && npm run --silent lint && vsce package",
+        "lint": "eslint src --ext ts",
+        "test": "vscode-test"
     },
-    "views": {
-      "sidebar": [
-        {
-          "type": "webview",
-          "id": "base-view-sidebar",
-          "name": "ICP Developer Extension",
-          "icon": "default.png",
-          "contextualTitle": "ICP Developer Extension"
-        }
-      ]
+    "devDependencies": {
+        "@types/mocha": "^10.0.6",
+        "@types/node": "18.x",
+        "@types/vscode": "^1.86.0",
+        "@typescript-eslint/eslint-plugin": "^6.19.1",
+        "@typescript-eslint/parser": "^6.19.1",
+        "@vscode/test-cli": "^0.0.4",
+        "@vscode/test-electron": "^2.3.9",
+        "eslint": "^8.56.0",
+        "typescript": "^5.3.3"
     },
-    "statusbar": [
-      {
-        "id": "extension.startServer",
-        "alignment": "left",
-        "priority": 100
-      }
-    ]
-  },
-  "scripts": {
-    "postinstall": "cd webview-ui && npm i",
-    "start": "cd webview-ui && npm start",
-    "build": "cd webview-ui && npm run build",
-    "vscode:prepublish": "npm run compile",
-    "compile": "npm run build && tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "package": "npm run compile && npm test && npm run --silent lint && vsce package",
-    "lint": "eslint src --ext ts",
-    "test": "vscode-test"
-  },
-  "devDependencies": {
-    "@types/mocha": "^10.0.6",
-    "@types/node": "18.x",
-    "@types/vscode": "^1.86.0",
-    "@typescript-eslint/eslint-plugin": "^6.19.1",
-    "@typescript-eslint/parser": "^6.19.1",
-    "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.9",
-    "eslint": "^8.56.0",
-    "typescript": "^5.3.3"
-  },
-  "dependencies": {}
+    "dependencies": {}
 }
