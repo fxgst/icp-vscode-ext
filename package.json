@@ -68,6 +68,9 @@
     ]
   },
   "scripts": {
+    "postinstall": "cd webview-ui && npm i",
+    "start": "cd webview-ui && npm start",
+    "build": "cd webview-ui && npm run build",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
