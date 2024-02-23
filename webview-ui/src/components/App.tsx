@@ -15,6 +15,7 @@ function CanisterListItem({ text, link }: CanisterListItemProps) {
         <button>{text}</button>
       </a>
       <br />
+      <br />
     </div>
   );
 }
@@ -110,8 +111,7 @@ function App() {
             }}
             size={256}
             viewBox="0 0 256 256"
-            // TODO
-            value={`placeholder data`}
+            value={vscodeState.accountId}
           />
         </>
       )}
@@ -119,11 +119,11 @@ function App() {
       <br />
       <h2>Canisters</h2>
 
-      {/* Sanity check */}
+      {/* Sanity check
       <CanisterListItem
         text="Open nonexistent canister"
         link="http://127.0.0.1:4943/"
-      />
+      /> */}
 
       <div>
         {frontendCanisters.map(({ canister, id }, i) => (
