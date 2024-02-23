@@ -1,6 +1,7 @@
 import { VSCodeLink } from "@vscode/webview-ui-toolkit/react";
 import { useEventListener } from "usehooks-ts";
 import { postVSCodeMessage, useVSCodeState } from "../hooks/useVSCode";
+import { useEffect } from 'react';
 import QRCode from "react-qr-code";
 
 interface CanisterListItemProps {
@@ -22,6 +23,15 @@ function CanisterListItem({ text, link }: CanisterListItemProps) {
 
 function App() {
   const [vscodeState, setVSCodeState] = useVSCodeState();
+  const balanceRefreshIntervalSeconds = 5;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      balance();
+    }, balanceRefreshIntervalSeconds * 1000);
+
+    return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+  }, []);
 
   // Handle messages sent from the extension to the webview
   // extension => UI
@@ -42,6 +52,10 @@ function App() {
       }
       case "showQRCode": {
         setVSCodeState({ ...vscodeState, accountId: message.value });
+        break;
+      }
+      case "balance": {
+        setVSCodeState({ ...vscodeState, balance: message.value });
         break;
       }
     }
@@ -68,7 +82,7 @@ function App() {
   }
 
   function deactivate() {
-    setVSCodeState({ canisters: {} });
+    setVSCodeState(undefined);
   }
 
   function dfxStart() {
@@ -81,6 +95,10 @@ function App() {
 
   function dfxDeploy() {
     postVSCodeMessage({ type: "dfxDeploy" });
+  }
+
+  function balance() {
+    postVSCodeMessage({ type: "balance" });
   }
 
   return (
@@ -113,17 +131,13 @@ function App() {
             viewBox="0 0 256 256"
             value={vscodeState.accountId}
           />
+          <br />
+          <h3>Balance: {vscodeState.balance ?? 0} ICP</h3>
         </>
       )}
 
       <br />
       <h2>Canisters</h2>
-
-      {/* Sanity check
-      <CanisterListItem
-        text="Open nonexistent canister"
-        link="http://127.0.0.1:4943/"
-      /> */}
 
       <div>
         {frontendCanisters.map(({ canister, id }, i) => (

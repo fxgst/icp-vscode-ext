@@ -9,6 +9,7 @@ import useObservableState from "./utils/useObservableState";
 export interface VSCodeState {
   canisters?: Record<string, CanisterIds>;
   accountId?: string;
+  balance?: number;
 }
 
 export interface CanisterIds {

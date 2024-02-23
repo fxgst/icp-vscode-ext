@@ -78,7 +78,7 @@ function publishCanisters() {
       const account = output.flat().join("");
       const message = { type: "showQRCode", value: account };
       sidebarView.webview.postMessage(message);
-      vscode.window.showInformationMessage(`Account ID: ${account}`);
+    //   vscode.window.showInformationMessage(`Account ID: ${account}`);
     },
     (output) => {
       vscode.window.showErrorMessage(output.flat().join(""));
@@ -91,6 +91,21 @@ function publishCanisters() {
   // show qr code, request user to send X ICP to the account
   // dfx quickstart
   // dfx identity export vscode-ext > identity.pem
+}
+
+function balance() {
+	spawnCommand(
+		"dfx",
+		["ledger", "balance", "--network", "ic"],
+		(output) => {
+			const balance: number = parseFloat(`${output.at(-1)}`.split(" ")[0]);
+			const message = { type: "balance", value: balance };
+			sidebarView.webview.postMessage(message);
+		},
+		(output) => {
+			vscode.window.showErrorMessage(output.flat().join(""));
+		}
+	);
 }
 
 function deployCanisters() {
@@ -155,6 +170,10 @@ class MainViewProvider implements vscode.WebviewViewProvider {
           publishCanisters();
           break;
         }
+		case "balance": {
+			balance();
+			break;
+		}
       }
     });
   }
