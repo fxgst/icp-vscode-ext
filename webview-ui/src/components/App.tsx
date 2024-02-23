@@ -1,7 +1,7 @@
-import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeLink } from "@vscode/webview-ui-toolkit/react";
 import { useEventListener } from "usehooks-ts";
 import { postVSCodeMessage, useVSCodeState } from "../hooks/useVSCode";
-import "./App.css";
+import QRCode from "react-qr-code";
 
 interface CanisterListItemProps {
   text: string;
@@ -11,7 +11,9 @@ interface CanisterListItemProps {
 function CanisterListItem({ text, link }: CanisterListItemProps) {
   return (
     <div>
-      <VSCodeLink href={text}>{text}</VSCodeLink>
+      <a href={link}>
+        <button>{text}</button>
+      </a>
       <br />
     </div>
   );
@@ -60,16 +62,6 @@ function App() {
     }
   }
 
-  // function showQRCode(accountId: string) {
-  //   // setVSCodeState({ ...vscodeState, accountId: accountId });
-  //   let qrCode = document.querySelector(".qr-code");
-  //   removeChildren(qrCode);
-
-  //   let p = document.createElement("p");
-  //   p.textContent = "Please transfer 1 ICP to " + accountId;
-  //   qrCode?.appendChild(p);
-  // }
-
   function publishCanisters() {
     postVSCodeMessage({ type: "publishCanisters" });
   }
@@ -94,13 +86,44 @@ function App() {
     <main>
       <h2>Develop</h2>
 
-      <VSCodeButton onClick={publishCanisters}>
-        Publish Canisters on ICP mainnet
-      </VSCodeButton>
+      <div>
+        <button onClick={publishCanisters}>
+          Publish canisters on ICP mainnet
+        </button>
+      </div>
 
-      {/* TODO: QR Code */}
+      {!!vscodeState?.accountId && (
+        <>
+          <br />
+          <h2>QR Code</h2>
 
+          <p>Please transfer 1 ICP to {vscodeState.accountId}</p>
+
+          <QRCode
+            // TODO: maybe refactor to CSS
+            style={{
+              height: "auto",
+              background: "white",
+              padding: 10,
+              maxWidth: "100%",
+              width: "100%",
+            }}
+            size={256}
+            viewBox="0 0 256 256"
+            // TODO
+            value={`placeholder data`}
+          />
+        </>
+      )}
+
+      <br />
       <h2>Canisters</h2>
+
+      {/* Sanity check */}
+      <CanisterListItem
+        text="Open nonexistent canister"
+        link="http://127.0.0.1:4943/"
+      />
 
       <div>
         {frontendCanisters.map(({ canister, id }, i) => (
