@@ -1,0 +1,9 @@
+body {
+	background-color: transparent;
+}
+
+.dfx-start-button {
+	display: block;
+	border: none;
+	margin: 0 auto;
+}

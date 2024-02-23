@@ -68,10 +68,14 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./",
+    "postinstall": "cd webview-ui && npm i",
+    "start": "cd webview-ui && npm start",
+    "build": "cd webview-ui && npm run build",
+    "vscode:prepublish": "npm run compile",
+    "compile": "npm run build && tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "yarn run compile && yarn run lint",
+    "pretest": "npm run compile && npm run lint",
+    "package": "npm run compile && npm test && npm run --silent lint && vsce package",
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
@@ -86,8 +90,5 @@
     "eslint": "^8.56.0",
     "typescript": "^5.3.3"
   },
-  "dependencies": {
-    "@dfinity/gix-components": "^4.1.0",
-    "qr-creator": "^1.0.0"
-  }
+  "dependencies": {}
 }
