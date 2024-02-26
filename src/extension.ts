@@ -1,89 +1,64 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import execa from 'execa';
 
 let sidebarView: vscode.WebviewView;
-
-function spawnCommand(
-    command: string,
-    args: string[],
-    success: { (arg0: string[]): void },
-    failure: { (arg0: string[]): void }
-) {
-    const { spawn } = require('child_process');
-    const cmd = spawn(command, args, {
-        cwd: `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}`,
-    });
-    // Listen for any response from the command
-    let output: string[] = [''];
-
-    cmd.stderr.on('data', (data: any) => {
-        process.stdout.write(`${data}`);
-        output.push(data);
-    });
-
-    cmd.stdout.on('data', (data: any) => {
-        process.stdout.write(`${data}`);
-        output.push(data);
-    });
-
-    // Listen for the exit event
-    cmd.on('exit', (code: number) => {
-        if (code === 0) {
-            success(output);
-        } else {
-            failure(output);
-        }
-    });
-}
+const execOptions = {
+    cwd: `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}`,
+};
 
 function resetCanisterList(): Thenable<boolean> {
     return sidebarView.webview.postMessage({ type: 'deactivate' });
 }
 
 function startServer() {
-    spawnCommand(
-        'dfx',
-        ['start', '--background', '--clean'],
-        (output) => {
+    try {
+        const cmd = execa(
+            'dfx',
+            ['start', '--background', '--clean'],
+            execOptions
+        );
+
+        cmd.stderr?.on('data', (data: any) => {
+            process.stdout.write(`${data}`);
+        });
+
+        cmd.on('exit', (code: any) => {
             vscode.window.showInformationMessage('Server started.');
-            vscode.window.showInformationMessage(`${output.at(-1)}`);
-        },
-        (output) => {
-            vscode.window.showErrorMessage(output.flat().join(''));
-        }
-    );
+        });
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
 }
 
-function stopServer() {
-    spawnCommand(
-        'dfx',
-        ['stop'],
-        () => {
-            vscode.window.showInformationMessage('Server stopped.');
-        },
-        (output) => {
-            vscode.window.showErrorMessage(output.flat().join(''));
-        }
-    );
+async function stopServer() {
+    try {
+        const cmd = await execa('dfx', ['stop'], execOptions);
+        process.stdout.write(`${cmd.stderr}`);
+        process.stdout.write(cmd.stdout);
+        vscode.window.showInformationMessage('Server stopped.');
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
     resetCanisterList();
 }
 
-function publishCanisters() {
+async function publishCanisters() {
     // ✅ dfx identity new vscode-ext --storage-mode plaintext
     // ✅ dfx identity use vscode-ext
-    spawnCommand(
-        'dfx',
-        ['ledger', 'account-id'],
-        (output) => {
-            const account = output.flat().join('');
-            const message = { type: 'showQRCode', value: account };
-            sidebarView.webview.postMessage(message);
-            //   vscode.window.showInformationMessage(`Account ID: ${account}`);
-        },
-        (output) => {
-            vscode.window.showErrorMessage(output.flat().join(''));
-        }
-    );
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['ledger', 'account-id', '--network', 'ic'],
+            execOptions
+        );
+        const accountId = cmd.stdout;
+        const message = { type: 'showQRCode', value: accountId };
+        sidebarView.webview.postMessage(message);
+        console.log(cmd.stdout);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
 
     // show balance: dfx ledger balance --network ic
 
@@ -93,48 +68,77 @@ function publishCanisters() {
     // dfx identity export vscode-ext > identity.pem
 }
 
-function balance() {
-    spawnCommand(
-        'dfx',
-        ['ledger', 'balance', '--network', 'ic'],
-        (output) => {
-            const balance: number = parseFloat(
-                `${output.at(-1)}`.split(' ')[0]
-            );
-            const message = { type: 'balance', value: balance };
-            sidebarView.webview.postMessage(message);
-        },
-        (output) => {
-            vscode.window.showErrorMessage(output.flat().join(''));
-        }
-    );
+async function balance() {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['ledger', 'balance', '--network', 'ic'],
+            execOptions
+        );
+        const balance: number = parseFloat(cmd.stdout.split(' ')[0]);
+        const message = { type: 'balance', value: balance };
+        sidebarView.webview.postMessage(message);
+        console.log(cmd.stdout);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
 }
 
-function deployCanisters() {
+async function deployCanisters() {
     vscode.window.showInformationMessage('Deploying canisters...');
-    spawnCommand(
-        'dfx',
-        ['deploy'],
-        () => {
-            const file = `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/.dfx/local/canister_ids.json`;
-            fs.readFile(file, 'utf8', (err: any, data: any) => {
-                if (err) {
-                    vscode.window.showErrorMessage(err);
-                    return;
-                }
-                const canisters = JSON.parse(data);
-                const message = {
-                    type: 'updateCanisterList',
-                    value: canisters,
-                };
-                sidebarView.webview.postMessage(message);
-            });
-            vscode.window.showInformationMessage('Deployed canisters!');
-        },
-        (output) => {
-            vscode.window.showErrorMessage(output.flat().join(''));
-        }
-    );
+    try {
+        const cmd = execa('dfx', ['deploy'], execOptions);
+
+        cmd.stderr?.on('data', (data: any) => {
+            process.stdout.write(`${data}`);
+        });
+        await cmd;
+
+        const file = `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/.dfx/local/canister_ids.json`;
+        fs.readFile(file, 'utf8', (err: any, data: any) => {
+            if (err) {
+                vscode.window.showErrorMessage(err);
+                return;
+            }
+            const canisters = JSON.parse(data);
+            const message = {
+                type: 'updateCanisterList',
+                value: canisters,
+            };
+            sidebarView.webview.postMessage(message);
+        });
+        vscode.window.showInformationMessage('Deployed canisters!');
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
+}
+
+async function createIdentity() {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['identity', 'new', 'vscode-ext', '--storage-mode', 'plaintext'],
+            execOptions
+        );
+        vscode.window.showInformationMessage('Identity created.');
+        console.log(cmd.stderr);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
+}
+
+async function useIdentity() {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['identity', 'use', 'vscode-ext'],
+            execOptions
+        );
+        vscode.window.showInformationMessage('Identity set.');
+        console.log(cmd.stderr);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
 }
 
 class MainViewProvider implements vscode.WebviewViewProvider {
@@ -220,7 +224,7 @@ function getNonce() {
     return text;
 }
 
-function load_extension(context: vscode.ExtensionContext) {
+async function load_extension(context: vscode.ExtensionContext) {
     const provider = new MainViewProvider(context.extensionUri);
 
     context.subscriptions.push(
@@ -271,63 +275,21 @@ function load_extension(context: vscode.ExtensionContext) {
         publish
     );
 
-    // Start the server, create an identity and set it.
-    spawnCommand(
-        'dfx',
-        ['start', '--background', '--clean'],
-        (output) => {
-            vscode.window.showInformationMessage('Server started.');
-            vscode.window.showInformationMessage(`${output.at(-1)}`);
-            spawnCommand(
-                'dfx',
-                [
-                    'identity',
-                    'new',
-                    'vscode-ext',
-                    '--storage-mode',
-                    'plaintext',
-                ],
-                () => {
-                    vscode.window.showInformationMessage('Identity created.');
-                    spawnCommand(
-                        'dfx',
-                        ['identity', 'use', 'vscode-ext'],
-                        () => {
-                            vscode.window.showInformationMessage(
-                                'Identity set.'
-                            );
-                        },
-                        (output) => {
-                            vscode.window.showErrorMessage(
-                                output.flat().join('')
-                            );
-                        }
-                    );
-                },
-                (output) => {
-                    vscode.window.showErrorMessage(output.flat().join(''));
-                }
-            );
-        },
-        (output) => {
-            vscode.window.showErrorMessage(output.flat().join(''));
-        }
-    );
+    await createIdentity();
+    await useIdentity();
+    startServer();
 }
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     // Check if there's a dfx.json file in the workspace
-    spawnCommand(
-        'find',
-        ['dfx.json'],
-        () => {
-            load_extension(context);
-        },
-        () =>
-            vscode.window.showErrorMessage(
-                'No dfx.json file found in the workspace.'
-            )
-    );
+    try {
+        await execa('find', ['dfx.json'], execOptions);
+        load_extension(context);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(
+            'No dfx.json file found in the workspace.'
+        );
+    }
 }
 
 export function deactivate() {
