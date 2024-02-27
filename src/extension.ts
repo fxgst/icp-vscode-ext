@@ -3,8 +3,12 @@ import * as fs from 'fs';
 import execa from 'execa';
 
 let sidebarView: vscode.WebviewView;
+
+const dfxIdentity = 'vscode-ext';
+const cmcId = 'rkp4c-7iaaa-aaaaa-aaaca-cai';
 const execOptions = {
     cwd: `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}`,
+    env: { DFX_DISABLE_AUTO_WALLET: '1' },
 };
 
 function resetCanisterList(): Thenable<boolean> {
@@ -15,7 +19,7 @@ function startServer() {
     try {
         const cmd = execa(
             'dfx',
-            ['start', '--background', '--clean'],
+            ['start', '--background'], //, '--clean'],
             execOptions
         );
 
@@ -33,7 +37,11 @@ function startServer() {
 
 async function stopServer() {
     try {
-        const cmd = await execa('dfx', ['stop'], execOptions);
+        const cmd = await execa(
+            'killall',
+            ['icx-proxy', 'replica', 'dfx'],
+            execOptions
+        );
         process.stdout.write(`${cmd.stderr}`);
         process.stdout.write(cmd.stdout);
         vscode.window.showInformationMessage('Server stopped.');
@@ -49,7 +57,7 @@ async function publishCanisters() {
     try {
         const cmd = await execa(
             'dfx',
-            ['ledger', 'account-id', '--network', 'ic'],
+            ['ledger', 'account-id'], //, '--ic'],
             execOptions
         );
         const accountId = cmd.stdout;
@@ -58,6 +66,33 @@ async function publishCanisters() {
         console.log(cmd.stdout);
     } catch (error: any) {
         vscode.window.showErrorMessage(error.stderr);
+    }
+
+    // Calculate needed ICP
+    let xdr_per_icp = await getExchangeRate();
+
+    // Count number of canisters user wants to deploy
+    let number_of_canisters = numberOfCanisters();
+
+    console.log(number_of_canisters);
+    console.log(xdr_per_icp);
+
+    // Create wallet if it doesn't exist
+    let exists = await checkIfWalletExists();
+    if (!exists) {
+        console.log('Wallet does not exist, creating a new one.');
+        let owner = await getPrincipal();
+        if (owner !== undefined) {
+            await createWallet(owner, 1.0);
+        }
+    }
+
+    let wallet = await checkIfWalletExists();
+
+    if (!wallet) {
+        vscode.window.showErrorMessage('Wallet not created.');
+    } else {
+        vscode.window.showInformationMessage('Wallet: ' + wallet);
     }
 
     // show balance: dfx ledger balance --network ic
@@ -72,7 +107,7 @@ async function balance() {
     try {
         const cmd = await execa(
             'dfx',
-            ['ledger', 'balance', '--network', 'ic'],
+            ['ledger', 'balance'], //, '--ic'],
             execOptions
         );
         const balance: number = parseFloat(cmd.stdout.split(' ')[0]);
@@ -117,13 +152,17 @@ async function createIdentity() {
     try {
         const cmd = await execa(
             'dfx',
-            ['identity', 'new', 'vscode-ext', '--storage-mode', 'plaintext'],
+            ['identity', 'new', dfxIdentity, '--storage-mode', 'plaintext'],
             execOptions
         );
-        vscode.window.showInformationMessage('Identity created.');
+        vscode.window.showInformationMessage(
+            `New identity ${dfxIdentity} created.`
+        );
         console.log(cmd.stderr);
+        console.log(cmd.stdout);
     } catch (error: any) {
-        vscode.window.showErrorMessage(error.stderr);
+        console.log(error.stderr);
+        console.log(error.stdout);
     }
 }
 
@@ -131,14 +170,114 @@ async function useIdentity() {
     try {
         const cmd = await execa(
             'dfx',
-            ['identity', 'use', 'vscode-ext'],
+            ['identity', 'use', dfxIdentity],
             execOptions
         );
-        vscode.window.showInformationMessage('Identity set.');
         console.log(cmd.stderr);
+        console.log(cmd.stdout);
     } catch (error: any) {
-        vscode.window.showErrorMessage(error.stderr);
+        console.log(error.stderr);
+        console.log(error.stdout);
     }
+}
+
+async function checkIfWalletExists(): Promise<string | undefined> {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['identity', 'get-wallet'], //, '--ic'],
+            execOptions
+        );
+        let wallet = cmd.stdout;
+        console.log(wallet);
+        return wallet;
+    } catch (error: any) {
+        console.log(error.stderr);
+    }
+}
+
+async function getPrincipal(): Promise<string | undefined> {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['identity', 'get-principal'], //, '--ic'],
+            execOptions
+        );
+        return cmd.stdout;
+    } catch (error: any) {
+        console.log(error.stderr);
+    }
+}
+
+async function createWallet(owner: string, icp_amount: number) {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['ledger', 'create-canister', owner, '--amount', `${icp_amount}`], //, '--ic'],
+            execOptions
+        );
+        console.log(cmd.stderr);
+        console.log(cmd.stdout);
+        let canister_id = cmd.stdout.split('\n').at(-1)?.split('"').at(-2);
+        if (canister_id !== undefined) {
+            try {
+                const cmd = await execa(
+                    'dfx',
+                    ['identity', 'deploy-wallet', canister_id], //, '--ic'],
+                    execOptions
+                );
+                console.log(cmd.stderr);
+                console.log(cmd.stdout);
+            } catch (error: any) {
+                throw error;
+            }
+        }
+    } catch (error: any) {
+        console.log(error.stderr);
+        console.log(error.stdout);
+    }
+}
+
+async function getExchangeRate(): Promise<number | undefined> {
+    // dfx canister call rkp4c-7iaaa-aaaaa-aaaca-cai get_icp_xdr_conversion_rate --query | grep xdr_permyriad_per_icp
+    try {
+        const cmd = await execa(
+            'dfx',
+            [
+                'canister',
+                'call',
+                cmcId,
+                'get_icp_xdr_conversion_rate',
+                '--query',
+                // '--ic',
+            ],
+            execOptions
+        );
+        // line looks like "      xdr_permyriad_per_icp = 1_234_567 : nat64;"
+        let cycles_per_e8s = cmd.stdout
+            .split('\n')
+            .find((line: string) => line.includes('xdr_permyriad_per_icp'))
+            ?.split(' ')
+            .at(-3)
+            ?.split('_')
+            .join('');
+        if (cycles_per_e8s !== undefined) {
+            let xdr_per_icp = parseFloat(cycles_per_e8s) / 10000.0; // 1 ICP = ... XDR
+            console.log(xdr_per_icp);
+            return xdr_per_icp;
+        }
+    } catch (error: any) {
+        console.log(error.stderr);
+        console.log(error.stdout);
+    }
+}
+
+function numberOfCanisters(): number {
+    const file = `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/dfx.json`;
+    const data = JSON.parse(
+        fs.readFileSync(file, { encoding: 'utf-8', flag: 'r' })
+    );
+    return Object.keys(data['canisters']).length;
 }
 
 class MainViewProvider implements vscode.WebviewViewProvider {
