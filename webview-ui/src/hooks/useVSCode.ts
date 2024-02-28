@@ -9,7 +9,9 @@ import useObservableState from './utils/useObservableState';
 export interface VSCodeState {
     canisters?: Record<string, CanisterIds>;
     accountId?: string;
-    balance?: number;
+    icpBalance?: number;
+    xdrBalance?: number;
+    requiredIcp?: number;
 }
 
 export interface CanisterIds {
@@ -33,7 +35,7 @@ export function useVSCode() {
 // Get the VS Code state
 export function useVSCodeState(): [
     VSCodeState | undefined,
-    (state: VSCodeState | undefined) => void,
+    (state: VSCodeState | undefined) => void
 ] {
     return vscode
         ? useObservableState(VSCODE_STORE)

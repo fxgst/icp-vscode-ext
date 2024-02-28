@@ -4,12 +4,13 @@ import execa from 'execa';
 
 let sidebarView: vscode.WebviewView;
 
-const dfxIdentity = 'vscode-ext';
-const cmcId = 'rkp4c-7iaaa-aaaaa-aaaca-cai';
+const dfxIdentity: string = 'vscode-ext';
+const cmcId: string = 'rkp4c-7iaaa-aaaaa-aaaca-cai';
 const execOptions = {
     cwd: `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}`,
     env: { DFX_DISABLE_AUTO_WALLET: '1' },
 };
+const requiredXdrPerCanister: number = 2;
 
 function resetCanisterList(): Thenable<boolean> {
     return sidebarView.webview.postMessage({ type: 'deactivate' });
@@ -51,6 +52,39 @@ async function stopServer() {
     resetCanisterList();
 }
 
+async function icpBalance(): Promise<number | undefined> {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['ledger', 'balance'], //, '--ic'],
+            execOptions
+        );
+        const balance: number = parseFloat(cmd.stdout.split(' ')[0]);
+        const message = { type: 'icpBalance', value: balance };
+        sidebarView.webview.postMessage(message);
+        console.log(cmd.stdout);
+        return balance;
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
+}
+
+async function xdrBalance(): Promise<number | undefined> {
+    try {
+        const cmd = await execa(
+            'dfx',
+            ['wallet', 'balance'], //, '--ic'],
+            execOptions
+        );
+        const balance = cmd.stdout?.split(' ').at(0);
+        const message = { type: 'xdrBalance', value: balance };
+        sidebarView.webview.postMessage(message);
+        return parseFloat(balance!);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+    }
+}
+
 async function publishCanisters() {
     // ✅ dfx identity new vscode-ext --storage-mode plaintext
     // ✅ dfx identity use vscode-ext
@@ -68,66 +102,64 @@ async function publishCanisters() {
         vscode.window.showErrorMessage(error.stderr);
     }
 
-    // Calculate needed ICP
-    let xdr_per_icp = await getExchangeRate();
-
-    // Count number of canisters user wants to deploy
-    let number_of_canisters = numberOfCanisters();
-
-    console.log(number_of_canisters);
-    console.log(xdr_per_icp);
-
     // Create wallet if it doesn't exist
     let exists = await checkIfWalletExists();
     if (!exists) {
         console.log('Wallet does not exist, creating a new one.');
         let owner = await getPrincipal();
         if (owner !== undefined) {
-            await createWallet(owner, 1.0);
+            // Calculate needed ICP
+            let xdr_per_icp = await getExchangeRate();
+
+            // Count number of canisters user wants to deploy
+            let number_of_canisters = numberOfCanisters();
+
+            console.log('XDR per ICP: ' + xdr_per_icp);
+            let required_icp =
+                (requiredXdrPerCanister * number_of_canisters + 0.1 + 0.5) /
+                xdr_per_icp!;
+
+            required_icp = Number(required_icp.toFixed(2)) + 0.01;
+
+            let current_balance = await icpBalance();
+            if (current_balance! < required_icp) {
+                vscode.window.showErrorMessage(
+                    `Not enough ICP. Needed: ${required_icp}, current balance: ${current_balance}`
+                );
+                const message = { type: 'requiredIcp', value: required_icp };
+                sidebarView.webview.postMessage(message);
+                return;
+            } else {
+                await createWallet(owner, required_icp - 0.0001);
+            }
         }
     }
 
     let wallet = await checkIfWalletExists();
 
     if (!wallet) {
-        vscode.window.showErrorMessage('Wallet not created.');
+        vscode.window.showErrorMessage('Wallet could not be created.');
+        return;
     } else {
-        vscode.window.showInformationMessage('Wallet: ' + wallet);
+        console.log('Wallet found.');
+        console.log('Wallet balance: ' + (await xdrBalance()));
     }
 
-    // show balance: dfx ledger balance --network ic
+    vscode.window.showInformationMessage('Deploying canisters to mainnet...');
+    console.log('Deploying canisters to mainnet...');
 
-    // dfx ledger account-id
-    // show qr code, request user to send X ICP to the account
-    // dfx quickstart
-    // dfx identity export vscode-ext > identity.pem
-}
-
-async function balance() {
     try {
-        const cmd = await execa(
+        const cmd = execa(
             'dfx',
-            ['ledger', 'balance'], //, '--ic'],
+            ['deploy', '--with-cycles', `${requiredXdrPerCanister}T`], //, '--ic'],
             execOptions
         );
-        const balance: number = parseFloat(cmd.stdout.split(' ')[0]);
-        const message = { type: 'balance', value: balance };
-        sidebarView.webview.postMessage(message);
-        console.log(cmd.stdout);
-    } catch (error: any) {
-        vscode.window.showErrorMessage(error.stderr);
-    }
-}
-
-async function deployCanisters() {
-    vscode.window.showInformationMessage('Deploying canisters...');
-    try {
-        const cmd = execa('dfx', ['deploy'], execOptions);
 
         cmd.stderr?.on('data', (data: any) => {
             process.stdout.write(`${data}`);
         });
-        await cmd;
+
+        const finished_cmd = await cmd;
 
         const file = `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/.dfx/local/canister_ids.json`;
         fs.readFile(file, 'utf8', (err: any, data: any) => {
@@ -142,7 +174,61 @@ async function deployCanisters() {
             };
             sidebarView.webview.postMessage(message);
         });
-        vscode.window.showInformationMessage('Deployed canisters!');
+
+        if (finished_cmd.exitCode !== 0) {
+            vscode.window.showErrorMessage(
+                'Error deploying canisters:' + finished_cmd.stderr
+            );
+            console.log('Wallet balance: ' + (await xdrBalance()));
+        } else {
+            vscode.window.showInformationMessage('Deployed canisters!');
+            console.log('Wallet balance: ' + (await xdrBalance()));
+        }
+    } catch (error: any) {
+        vscode.window.showErrorMessage(error.stderr);
+        console.log(error.stderr);
+        console.log('Wallet balance: ' + (await xdrBalance()));
+    }
+
+    // show balance: dfx ledger balance --network ic
+
+    // dfx ledger account-id
+    // show qr code, request user to send X ICP to the account
+    // dfx quickstart
+    // dfx identity export vscode-ext > identity.pem
+}
+
+async function deployCanisters() {
+    vscode.window.showInformationMessage('Deploying canisters...');
+    try {
+        const cmd = execa('dfx', ['deploy'], execOptions);
+
+        cmd.stderr?.on('data', (data: any) => {
+            process.stdout.write(`${data}`);
+        });
+        const finished_cmd = await cmd;
+
+        const file = `${vscode.workspace.workspaceFolders?.[0].uri.fsPath}/.dfx/local/canister_ids.json`;
+        fs.readFile(file, 'utf8', (err: any, data: any) => {
+            if (err) {
+                vscode.window.showErrorMessage(err);
+                return;
+            }
+            const canisters = JSON.parse(data);
+            const message = {
+                type: 'updateCanisterList',
+                value: canisters,
+            };
+            sidebarView.webview.postMessage(message);
+        });
+
+        if (finished_cmd.exitCode !== 0) {
+            vscode.window.showErrorMessage(
+                'Error deploying canisters:' + finished_cmd.stderr
+            );
+        } else {
+            vscode.window.showInformationMessage('Deployed canisters!');
+        }
     } catch (error: any) {
         vscode.window.showErrorMessage(error.stderr);
     }
@@ -234,7 +320,6 @@ async function createWallet(owner: string, icp_amount: number) {
         }
     } catch (error: any) {
         console.log(error.stderr);
-        console.log(error.stdout);
     }
 }
 
@@ -315,8 +400,12 @@ class MainViewProvider implements vscode.WebviewViewProvider {
                     publishCanisters();
                     break;
                 }
-                case 'balance': {
-                    balance();
+                case 'icpBalance': {
+                    icpBalance();
+                    break;
+                }
+                case 'xdrBalance': {
+                    xdrBalance();
                     break;
                 }
             }

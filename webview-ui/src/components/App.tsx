@@ -27,7 +27,8 @@ function App() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            balance();
+            icpBalance();
+            xdrBalance();
         }, balanceRefreshIntervalSeconds * 1000);
 
         return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
@@ -54,8 +55,17 @@ function App() {
                 setVSCodeState({ ...vscodeState, accountId: message.value });
                 break;
             }
-            case 'balance': {
-                setVSCodeState({ ...vscodeState, balance: message.value });
+            case 'icpBalance': {
+                setVSCodeState({ ...vscodeState, icpBalance: message.value });
+                break;
+            }
+            case 'xdrBalance': {
+                setVSCodeState({ ...vscodeState, xdrBalance: message.value });
+                break;
+            }
+            case 'requiredIcp': {
+                setVSCodeState({ ...vscodeState, requiredIcp: message.value });
+
                 break;
             }
         }
@@ -103,8 +113,12 @@ function App() {
         postVSCodeMessage({ type: 'dfxDeploy' });
     }
 
-    function balance() {
-        postVSCodeMessage({ type: 'balance' });
+    function icpBalance() {
+        postVSCodeMessage({ type: 'icpBalance' });
+    }
+
+    function xdrBalance() {
+        postVSCodeMessage({ type: 'xdrBalance' });
     }
 
     return (
@@ -122,7 +136,7 @@ function App() {
                     <br />
                     <h2>QR Code</h2>
 
-                    <p>Please transfer 1 ICP to {vscodeState.accountId}</p>
+                    <p>Please transfer {vscodeState.requiredIcp ?? 420} ICP to {vscodeState.accountId}</p>
 
                     <QRCode
                         // TODO: maybe refactor to CSS
@@ -138,7 +152,9 @@ function App() {
                         value={vscodeState.accountId}
                     />
                     <br />
-                    <h3>Balance: {vscodeState.balance ?? 0} ICP</h3>
+                    <h3>ICP balance: {vscodeState.icpBalance ?? 42}</h3>      
+                    <h3>XDR (T cycles) balance: {vscodeState.xdrBalance ?? 42}</h3>
+
                 </>
             )}
 
