@@ -1,5 +1,5 @@
 import { VSCodeLink } from '@vscode/webview-ui-toolkit/react';
-import { useEventListener } from 'usehooks-ts';
+import { useEventListener, useInterval } from 'usehooks-ts';
 import { postVSCodeMessage, useVSCodeState } from '../hooks/useVSCode';
 import { useEffect } from 'react';
 import QRCode from 'react-qr-code';
@@ -25,14 +25,10 @@ function App() {
     const [vscodeState, setVSCodeState] = useVSCodeState();
     const balanceRefreshIntervalSeconds = 5;
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            icpBalance();
-            xdrBalance();
-        }, balanceRefreshIntervalSeconds * 1000);
-
-        return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
-    }, []);
+    useInterval(() => {
+        icpBalance();
+        xdrBalance();
+    }, balanceRefreshIntervalSeconds * 1000);
 
     // Handle messages sent from the extension to the webview
     // extension => UI
@@ -136,7 +132,10 @@ function App() {
                     <br />
                     <h2>QR Code</h2>
 
-                    <p>Please transfer {vscodeState.requiredIcp ?? 420} ICP to {vscodeState.accountId}</p>
+                    <p>
+                        Please transfer {vscodeState.requiredIcp ?? 420} ICP to{' '}
+                        {vscodeState.accountId}
+                    </p>
 
                     <QRCode
                         // TODO: maybe refactor to CSS
@@ -152,9 +151,10 @@ function App() {
                         value={vscodeState.accountId}
                     />
                     <br />
-                    <h3>ICP balance: {vscodeState.icpBalance ?? 42}</h3>      
-                    <h3>XDR (T cycles) balance: {vscodeState.xdrBalance ?? 42}</h3>
-
+                    <h3>ICP balance: {vscodeState.icpBalance ?? 42}</h3>
+                    <h3>
+                        XDR (T cycles) balance: {vscodeState.xdrBalance ?? 42}
+                    </h3>
                 </>
             )}
 
