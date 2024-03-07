@@ -33,11 +33,8 @@ async function startServer() {
 async function stopServer() {
     try {
         if (serverProcess) {
-            if (serverProcess.kill()) {
-                vscode.window.showInformationMessage('Server stopped.');
-            } else {
-                vscode.window.showWarningMessage('Unable to stop the server.');
-            }
+            serverProcess.kill();
+            vscode.window.showInformationMessage('Server stopped.');
         }
         // FIXME: When called in `deativate`, this message never reaches the webview, probably gets killed too early
         await resetCanisterList();
@@ -506,7 +503,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Check if there's a dfx.json file in the workspace
     try {
         await execa('find', ['dfx.json'], execOptions);
-        load_extension(context);
+        await load_extension(context);
     } catch (error: any) {
         vscode.window.showErrorMessage(
             'No dfx.json file found in the workspace.'
