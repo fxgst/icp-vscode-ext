@@ -39,6 +39,7 @@ async function stopServer() {
                 vscode.window.showWarningMessage('Unable to stop the server.');
             }
         }
+        // FIXME: When called in `deativate`, this message never reaches the webview, probably gets killed too early
         await resetCanisterList();
     } catch (error: any) {
         vscode.window.showErrorMessage(error.stderr ?? error);
