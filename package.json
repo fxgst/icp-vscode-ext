@@ -14,20 +14,20 @@
         "commands": [
             {
                 "command": "extension.startServer",
-                "title": "Start Server"
+                "title": "ICP: start server"
             },
             {
                 "command": "extension.stopServer",
-                "title": "Stop Server"
+                "title": "ICP: stop server"
             },
             {
                 "command": "extension.dfxDeploy",
-                "title": "Deploy Canisters Locally",
+                "title": "ICP: deploy canisters locally",
                 "icon": "$(debug-start)"
             },
             {
                 "command": "extension.publishCanisters",
-                "title": "Deploy Canisters to the ICP"
+                "title": "ICP: deploy canisters to mainnet"
             }
         ],
         "menus": {
