@@ -39,7 +39,7 @@ async function stopServer() {
             }
         }
     } catch (error: any) {
-        vscode.window.showErrorMessage(error.stderr);
+        vscode.window.showErrorMessage(error);
     }
     resetCanisterList();
 }
