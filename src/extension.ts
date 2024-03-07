@@ -16,23 +16,16 @@ function resetCanisterList(): Thenable<boolean> {
     return sidebarView.webview.postMessage({ type: 'deactivate' });
 }
 
-function startServer() {
+async function startServer() {
     try {
-        const cmd = execa(
-            'dfx',
-            ['start', '--background'], //, '--clean'],
-            execOptions
-        );
-
+        const cmd = execa('dfx', ['start'], execOptions);
         cmd.stderr?.on('data', (data: any) => {
             process.stdout.write(`${data}`);
         });
-
-        cmd.on('exit', (code: any) => {
-            vscode.window.showInformationMessage('Server started.');
-        });
+        await cmd;
+        vscode.window.showInformationMessage('Server started.');
     } catch (error: any) {
-        vscode.window.showErrorMessage(error.stderr);
+        vscode.window.showErrorMessage(error.stderr ?? error);
     }
 }
 
@@ -505,7 +498,7 @@ async function load_extension(context: vscode.ExtensionContext) {
 
     await createIdentity();
     await useIdentity();
-    startServer();
+    await startServer();
 }
 
 export async function activate(context: vscode.ExtensionContext) {
