@@ -136,65 +136,68 @@ function App() {
 
             <label htmlFor="deploy-dropdown">Deployment mode:</label>
             <br />
-            <VSCodeDropdown value={deployMode}>
+            <VSCodeDropdown value={deployMode} style={{ marginTop: '1em' }}>
                 {deployModes.map((mode) => (
                     <VSCodeOption onSelect={() => setDeployMode(mode)}>
                         {mode}
                     </VSCodeOption>
                 ))}
             </VSCodeDropdown>
-            <VSCodeDivider />
-            {deployMode === 'Local' && (
-                <button onClick={dfxDeploy}>Deploy locally</button>
-            )}
-            {deployMode === 'Playground' && (
-                // TODO
-                <button onClick={undefined}>Deploy to playground</button>
-            )}
-            {deployMode === 'ICP mainnet' && (
-                <>
-                    <div>
-                        <button onClick={publishCanisters}>
-                            Deploy on ICP mainnet
-                        </button>
-                    </div>
+            <div style={{ marginTop: '1em' }}>
+                {deployMode === 'Local' && (
+                    <button onClick={dfxDeploy}>Deploy locally</button>
+                )}
+                {deployMode === 'Playground' && (
+                    // TODO
+                    <button onClick={undefined}>Deploy to playground</button>
+                )}
+                {deployMode === 'ICP mainnet' && (
+                    <>
+                        <div>
+                            <button onClick={publishCanisters}>
+                                Deploy on ICP mainnet
+                            </button>
+                        </div>
 
-                    {!!vscodeState?.accountId && (
-                        <>
-                            <br />
-                            <h2>QR Code</h2>
+                        {!!vscodeState?.accountId && (
+                            <>
+                                <br />
+                                <h2>QR Code</h2>
 
-                            <p>
-                                Please transfer {vscodeState.requiredIcp ?? 420}{' '}
-                                ICP to {vscodeState.accountId}
-                            </p>
+                                <p>
+                                    Please transfer{' '}
+                                    {vscodeState.requiredIcp ?? 420} ICP to{' '}
+                                    {vscodeState.accountId}
+                                </p>
 
-                            <QRCode
-                                // TODO: maybe refactor to CSS
-                                style={{
-                                    height: 'auto',
-                                    background: 'white',
-                                    padding: 10,
-                                    maxWidth: '100%',
-                                    width: '100%',
-                                }}
-                                size={256}
-                                viewBox="0 0 256 256"
-                                value={vscodeState.accountId}
-                            />
-                            <br />
-                            <h3>ICP balance: {vscodeState.icpBalance ?? 42}</h3>
-                            <h3>
-                                XDR (T cycles) balance:{' '}
-                                {vscodeState.xdrBalance ?? 42}
-                            </h3>
-                        </>
-                    )}
-                </>
-            )}
+                                <QRCode
+                                    // TODO: maybe refactor to CSS
+                                    style={{
+                                        height: 'auto',
+                                        background: 'white',
+                                        padding: 10,
+                                        maxWidth: '100%',
+                                        width: '100%',
+                                    }}
+                                    size={256}
+                                    viewBox="0 0 256 256"
+                                    value={vscodeState.accountId}
+                                />
+                                <br />
+                                <h3>
+                                    ICP balance: {vscodeState.icpBalance ?? 42}
+                                </h3>
+                                <h3>
+                                    XDR (T cycles) balance:{' '}
+                                    {vscodeState.xdrBalance ?? 42}
+                                </h3>
+                            </>
+                        )}
+                    </>
+                )}
+            </div>
 
-            <br />
-            <VSCodeDivider />
+            <h2>Canisters</h2>
             <br />
 
             <div>

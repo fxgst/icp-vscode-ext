@@ -453,45 +453,33 @@ async function load_extension(context: vscode.ExtensionContext) {
         )
     );
 
-    // Add an icon to the activity bar
-    const startServerIcon = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Left
-    );
-    startServerIcon.text = '$(play)';
-    startServerIcon.tooltip = 'Deploy Canisters';
-    startServerIcon.command = 'extension.dfxDeploy';
-    startServerIcon.show();
-
-    // Register the command to start the server
-    let disposableStart = vscode.commands.registerCommand(
-        'extension.startServer',
-        startServer
-    );
-
-    // Register the command to stop the server
-    let disposableStop = vscode.commands.registerCommand(
-        'extension.stopServer',
-        stopServer
-    );
-
-    // Register the command to deploy canisters
-    let dfxDeploy = vscode.commands.registerCommand(
-        'extension.dfxDeploy',
-        deployCanisters
-    );
-
-    let publish = vscode.commands.registerCommand(
-        'extension.publishCanisters',
-        publishCanisters
-    );
+    // // Add an icon to the activity bar
+    // const startServerIcon = vscode.window.createStatusBarItem(
+    //     vscode.StatusBarAlignment.Left
+    // );
+    // startServerIcon.text = '$(play)';
+    // startServerIcon.tooltip = 'Deploy Canisters';
+    // startServerIcon.command = 'extension.dfxDeploy';
+    // startServerIcon.show();
 
     // Add a disposable to dispose the subscriptions when the extension is deactivated
     context.subscriptions.push(
-        startServerIcon,
-        disposableStart,
-        disposableStop,
-        dfxDeploy,
-        publish
+        // startServerIcon,
+
+        // Start the dfx server
+        vscode.commands.registerCommand('extension.startServer', startServer),
+
+        // Stop the dfx server
+        vscode.commands.registerCommand('extension.stopServer', stopServer),
+
+        // Deploy canisters to local replica
+        vscode.commands.registerCommand('extension.dfxDeploy', deployCanisters),
+
+        // Deploy canisters to ICP mainnet
+        vscode.commands.registerCommand(
+            'extension.publishCanisters',
+            publishCanisters
+        )
     );
 
     await createIdentity();
