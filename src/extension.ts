@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import execa from 'execa';
+import execa, { ExecaChildProcess } from 'execa';
 
 let sidebarView: vscode.WebviewView;
 
@@ -16,29 +16,28 @@ function resetCanisterList(): Thenable<boolean> {
     return sidebarView.webview.postMessage({ type: 'deactivate' });
 }
 
+let serverProcess: ExecaChildProcess<string>;
+
 async function startServer() {
-    try {
-        const cmd = execa('dfx', ['start'], execOptions);
-        cmd.stderr?.on('data', (data: any) => {
-            process.stdout.write(`${data}`);
-        });
-        await cmd;
-        vscode.window.showInformationMessage('Server started.');
-    } catch (error: any) {
-        vscode.window.showErrorMessage(error.stderr ?? error);
-    }
+    await stopServer();
+    serverProcess = execa('dfx', ['start'], execOptions);
+    serverProcess.stderr?.on('data', (data: any) => {
+        process.stdout.write(`${data}`);
+    });
+    serverProcess.catch((error) => {
+        vscode.window.showErrorMessage(error.stderr);
+    });
 }
 
 async function stopServer() {
     try {
-        const cmd = await execa(
-            'killall',
-            ['icx-proxy', 'replica', 'dfx'],
-            execOptions
-        );
-        process.stdout.write(`${cmd.stderr}`);
-        process.stdout.write(cmd.stdout);
-        vscode.window.showInformationMessage('Server stopped.');
+        if (serverProcess) {
+            if (serverProcess.kill()) {
+                vscode.window.showInformationMessage('Server stopped.');
+            } else {
+                vscode.window.showWarningMessage('Unable to stop the server.');
+            }
+        }
     } catch (error: any) {
         vscode.window.showErrorMessage(error.stderr);
     }
