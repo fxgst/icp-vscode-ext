@@ -42,6 +42,7 @@ async function stopServer() {
     } catch (error: any) {
         vscode.window.showErrorMessage(error);
     }
+    // FIXME: When called in `deativate`, this message never reaches the webview, probably gets killed too early
     resetCanisterList();
 }
 
@@ -513,10 +514,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 }
 
-export function deactivate() {
+export async function deactivate() {
     // This method is called when the extension is deactivated
-    // FIXME: This message never reaches the webview, probably gets killed too early
-    resetCanisterList().then(() =>
-        console.log('Successfully reset canister list.')
-    );
+    await stopServer();
 }
