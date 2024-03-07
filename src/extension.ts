@@ -12,7 +12,7 @@ const execOptions = {
 };
 const requiredXdrPerCanister: number = 2;
 
-function resetCanisterList(): Thenable<boolean> {
+async function resetCanisterList(): Promise<boolean> {
     return sidebarView.webview.postMessage({ type: 'deactivate' });
 }
 
@@ -39,10 +39,10 @@ async function stopServer() {
                 vscode.window.showWarningMessage('Unable to stop the server.');
             }
         }
+        await resetCanisterList();
     } catch (error: any) {
-        vscode.window.showErrorMessage(error);
+        vscode.window.showErrorMessage(error.stderr ?? error);
     }
-    resetCanisterList();
 }
 
 async function icpBalance(): Promise<number | undefined> {
