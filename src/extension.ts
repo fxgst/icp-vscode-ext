@@ -27,6 +27,7 @@ async function startServer() {
     serverProcess.catch((error) => {
         vscode.window.showErrorMessage(error.stderr);
     });
+    vscode.window.showInformationMessage('Server started.');
 }
 
 async function stopServer() {
