@@ -454,17 +454,17 @@ async function load_extension(context: vscode.ExtensionContext) {
     );
 
     // Add an icon to the activity bar
-    // const startServerIcon = vscode.window.createStatusBarItem(
-    //     vscode.StatusBarAlignment.Left
-    // );
-    // startServerIcon.text = '$(play)';
-    // startServerIcon.tooltip = 'Deploy Canisters';
-    // startServerIcon.command = 'extension.dfxDeploy';
-    // startServerIcon.show();
+    const deployIcon = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Left
+    );
+    deployIcon.text = '$(play)';
+    deployIcon.tooltip = 'Deploy Canisters';
+    deployIcon.command = 'extension.dfxDeploy';
+    deployIcon.show();
 
     // Add a disposable to dispose the subscriptions when the extension is deactivated
     context.subscriptions.push(
-        // startServerIcon,
+        deployIcon,
 
         // Start the dfx server
         vscode.commands.registerCommand('extension.startServer', startServer),

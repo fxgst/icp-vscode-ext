@@ -131,16 +131,18 @@ function App() {
 
     return (
         <main>
-            <h2>Develop</h2>
+            <h2>Deploy</h2>
             <br />
 
-            <label htmlFor="deploy-dropdown">Deployment mode:</label>
+            <label htmlFor="deploy-dropdown">Deployment target:</label>
             <br />
-            <VSCodeDropdown value={deployMode} style={{ marginTop: '1em' }}>
+            <VSCodeDropdown
+                value={deployMode}
+                onInput={(e) => setDeployMode((e as any).target.value)}
+                style={{ marginTop: '.5em' }}
+            >
                 {deployModes.map((mode) => (
-                    <VSCodeOption onSelect={() => setDeployMode(mode)}>
-                        {mode}
-                    </VSCodeOption>
+                    <VSCodeOption value={mode}>{mode}</VSCodeOption>
                 ))}
             </VSCodeDropdown>
             <div style={{ marginTop: '1em' }}>
