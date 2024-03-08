@@ -157,7 +157,7 @@ function App() {
                     <>
                         <div>
                             <button onClick={publishCanisters}>
-                                Deploy on ICP mainnet
+                                Deploy to ICP mainnet
                             </button>
                         </div>
 
