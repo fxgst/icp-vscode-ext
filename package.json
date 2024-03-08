@@ -14,15 +14,15 @@
         "commands": [
             {
                 "command": "extension.startServer",
-                "title": "ICP: start server"
+                "title": "ICP: start dfx server"
             },
             {
                 "command": "extension.stopServer",
-                "title": "ICP: stop server"
+                "title": "ICP: stop dfx server"
             },
             {
                 "command": "extension.dfxDeploy",
-                "title": "ICP: deploy canisters locally",
+                "title": "ICP: deploy canisters to local replica",
                 "icon": "$(debug-start)"
             },
             {
