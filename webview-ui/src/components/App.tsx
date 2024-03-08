@@ -199,13 +199,11 @@ function App() {
                 )}
             </div>
 
-            {Object.keys(canisters).length > 0 && (
+            {canisters.length && (
                 <>
-                    <VSCodeDivider style={{ margin: '0 1rem' }} />
-
-                    <h2>Canisters</h2>
+                    <VSCodeDivider style={{ marginTop: '2em' }} />
+                    <h2 style={{ marginTop: '1em' }}>Canisters</h2>
                     <br />
-
                     <div>
                         {frontendCanisters.map(({ canister, id }, i) => (
                             <CanisterListItem
