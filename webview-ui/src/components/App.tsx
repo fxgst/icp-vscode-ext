@@ -197,25 +197,31 @@ function App() {
                 )}
             </div>
 
-            <h2>Canisters</h2>
-            <br />
+            {Object.keys(canisters).length > 0 && (
+                <>
+                    <VSCodeDivider style={{ margin: '0 1rem' }} />
 
-            <div>
-                {frontendCanisters.map(({ canister, id }, i) => (
-                    <CanisterListItem
-                        key={i}
-                        text={`Open '${canister}' in browser`}
-                        link={`http://127.0.0.1:4943/?canisterId=${id}`}
-                    />
-                ))}
-                {backendCanisters.map(({ canister, id }, i) => (
-                    <CanisterListItem
-                        key={i}
-                        text={`Open '${canister}' Candid UI`}
-                        link={`http://127.0.0.1:4943/?canisterId=${candidUiCanister}&id=${id}`}
-                    />
-                ))}
-            </div>
+                    <h2>Canisters</h2>
+                    <br />
+
+                    <div>
+                        {frontendCanisters.map(({ canister, id }, i) => (
+                            <CanisterListItem
+                                key={i}
+                                text={`Open '${canister}' in browser`}
+                                link={`http://127.0.0.1:4943/?canisterId=${id}`}
+                            />
+                        ))}
+                        {backendCanisters.map(({ canister, id }, i) => (
+                            <CanisterListItem
+                                key={i}
+                                text={`Open '${canister}' Candid UI`}
+                                link={`http://127.0.0.1:4943/?canisterId=${candidUiCanister}&id=${id}`}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
         </main>
     );
 }

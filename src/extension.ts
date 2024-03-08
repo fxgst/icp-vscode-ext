@@ -453,7 +453,7 @@ async function load_extension(context: vscode.ExtensionContext) {
         )
     );
 
-    // // Add an icon to the activity bar
+    // Add an icon to the activity bar
     // const startServerIcon = vscode.window.createStatusBarItem(
     //     vscode.StatusBarAlignment.Left
     // );
