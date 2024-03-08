@@ -199,7 +199,7 @@ function App() {
                 )}
             </div>
 
-            {canisters.length && (
+            {vscodeState?.canisters && (
                 <>
                     <VSCodeDivider style={{ marginTop: '2em' }} />
                     <h2 style={{ marginTop: '1em' }}>Canisters</h2>
